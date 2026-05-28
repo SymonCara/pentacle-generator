@@ -32,8 +32,8 @@ const BASE_SYM = 70;  // taille CSS de base d'un symbole (px)
 let nextId = 1;
 
 const CIRCLE_SYM: SymbolDef = {
-  id: '__circle__', name: 'Cercle', category: 'emblem', image: '',
-  description: 'Cercle de tracé libre',
+  id: '__circle__', name: 'Cercle', nameEn: 'Circle', category: 'emblem', image: '',
+  description: 'Cercle de tracé libre', descriptionEn: 'Free drawing circle'
 };
 
 const processImageToBlack = (src: string): Promise<string> =>
@@ -56,7 +56,7 @@ const processImageToBlack = (src: string): Promise<string> =>
     img.src = src;
   });
 
-export const FreeCanvas: React.FC = () => {
+export const FreeCanvas: React.FC<{ lang: 'fr' | 'en' }> = ({ lang }) => {
   const [placedSymbols, setPlacedSymbols] = useState<PlacedSymbol[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -199,9 +199,10 @@ export const FreeCanvas: React.FC = () => {
     const newId = `sym-${nextId++}`;
 
     if (symbol.id === '__circle__') {
-      setPlacedSymbols(p => [...p, { id: newId, symbolId: '__circle__', image: '', name: 'Cercle', x: wx, y: wy, rotation: 0, scale: 1, isCircle: true, circleSizePx: 200, flipX: false, flipY: false }]);
+      setPlacedSymbols(p => [...p, { id: newId, symbolId: '__circle__', image: '', name: lang === 'fr' ? 'Cercle' : 'Circle', x: wx, y: wy, rotation: 0, scale: 1, isCircle: true, circleSizePx: 200, flipX: false, flipY: false }]);
     } else {
-      setPlacedSymbols(p => [...p, { id: newId, symbolId: symbol.id, image: symbol.image, blackImage: blackImages.get(symbol.image), name: symbol.name, x: wx, y: wy, rotation: 0, scale: 1, flipX: false, flipY: false }]);
+      const symName = lang === 'en' ? (symbol as any).nameEn || symbol.name : symbol.name;
+      setPlacedSymbols(p => [...p, { id: newId, symbolId: symbol.id, image: symbol.image, blackImage: blackImages.get(symbol.image), name: symName, x: wx, y: wy, rotation: 0, scale: 1, flipX: false, flipY: false }]);
     }
     setSelectedIds(new Set([newId]));
   }, [view, blackImages]);
@@ -359,13 +360,13 @@ export const FreeCanvas: React.FC = () => {
 
     // ── Cercle(s) ──
     syms.push({
-      id: `sym-${nextId++}`, symbolId: '__circle__', image: '', name: 'Cercle',
+      id: `sym-${nextId++}`, symbolId: '__circle__', image: '', name: lang === 'fr' ? 'Cercle' : 'Circle',
       x: cx - circleR, y: cy - circleR,
       rotation: 0, scale: 1, isCircle: true, circleSizePx: circleR * 2,
     });
     if (circleCount >= 2) {
       syms.push({
-        id: `sym-${nextId++}`, symbolId: '__circle__', image: '', name: 'Cercle',
+        id: `sym-${nextId++}`, symbolId: '__circle__', image: '', name: lang === 'fr' ? 'Cercle' : 'Circle',
         x: cx - innerR, y: cy - innerR,
         rotation: 0, scale: 1, isCircle: true, circleSizePx: innerR * 2,
       });
@@ -381,7 +382,7 @@ export const FreeCanvas: React.FC = () => {
       const r = ec > 1 ? 55 : 0;
       syms.push({
         id: `sym-${nextId++}`, symbolId: def.id, image: def.image,
-        blackImage: blackImages.get(def.image), name: def.name,
+        blackImage: blackImages.get(def.image), name: lang === 'en' ? (def as any).nameEn || def.name : def.name,
         x: cx + Math.cos(angle) * r - BASE_SYM / 2,
         y: cy + Math.sin(angle) * r - BASE_SYM / 2,
         rotation: 0, scale: 2.8,
@@ -418,7 +419,7 @@ export const FreeCanvas: React.FC = () => {
 
         syms.push({
           id: `sym-${nextId++}`, symbolId: def.id, image: def.image,
-          blackImage: blackImages.get(def.image), name: def.name,
+          blackImage: blackImages.get(def.image), name: lang === 'en' ? (def as any).nameEn || def.name : def.name,
           x: cx + Math.cos(angle) * radius - BASE_SYM / 2,
           y: cy + Math.sin(angle) * radius - BASE_SYM / 2,
           rotation, scale: 0.72,
@@ -433,7 +434,7 @@ export const FreeCanvas: React.FC = () => {
         if (!def) return;
         syms.push({
           id: `sym-${nextId++}`, symbolId: def.id, image: def.image,
-          blackImage: blackImages.get(def.image), name: def.name,
+          blackImage: blackImages.get(def.image), name: lang === 'en' ? (def as any).nameEn || def.name : def.name,
           x: cx + item.xOffset - BASE_SYM / 2,
           y: cy + item.yOffset - BASE_SYM / 2,
           rotation: item.rotation, scale: item.scale,
@@ -444,7 +445,7 @@ export const FreeCanvas: React.FC = () => {
 
     setPlacedSymbols(p => [...p, ...syms]);
     setSelectedIds(new Set());
-  }, [view, blackImages]);
+  }, [view, blackImages, lang]);
 
   const handlePaletteDragStart = (e: React.DragEvent, symbol: SymbolDef) => {
     e.dataTransfer.setData('application/json', JSON.stringify(symbol));
