@@ -120,15 +120,15 @@ export const SPELLS: SpellDef[] = [
     arrowReps: 0,
     customLayout: [
       // Flèches colonne formant un motif en haut
-      { symbolId: 'colonne', xOffset: 0, yOffset: -100, rotation: 180, scale: 0.9 }, // pointe vers le bas
       { symbolId: 'colonne', xOffset: -45, yOffset: -85, rotation: 90, scale: 0.9 }, // pointe droite
       { symbolId: 'colonne', xOffset: 45, yOffset: -85, rotation: 270, scale: 0.9 }, // pointe gauche
-      // Flèche dispersion au centre avec l'eau
-      { symbolId: 'dispersion', xOffset: 0, yOffset: 15, rotation: 180, scale: 2.2 },
-      // Signes inconnus en bas
+      // Flèche dispersion au centre-haut
+      { symbolId: 'dispersion', xOffset: 0, yOffset: -100, rotation: 0, scale: 2.2 },
+      // Signes inconnus (courbes) encadrant l'emblème d'eau
+      { symbolId: 'inconnu_courbe', xOffset: -45, yOffset: 25, rotation: 0, scale: 0.9 },
+      { symbolId: 'inconnu_courbe', xOffset: 45, yOffset: 25, rotation: 180, scale: 0.9 }, // symétrique
+      // Signe triangle tout en bas
       { symbolId: 'inconnu_triangle', xOffset: 0, yOffset: 130, rotation: 0, scale: 1.1 },
-      { symbolId: 'inconnu_courbe', xOffset: -40, yOffset: 100, rotation: 0, scale: 0.9 },
-      { symbolId: 'inconnu_courbe', xOffset: 40, yOffset: 100, rotation: 180, scale: 0.9 }, // symétrique
     ],
     circleCount: 1,
     wikiUrl: 'https://latelier-des-sorciers.fandom.com/fr/wiki/Dague_d%27eau',

@@ -2,7 +2,12 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { EMBLEMS, ARROWS, ALL_SYMBOLS } from '../symbolsData';
 import type { SymbolDef } from '../symbolsData';
 import { SPELLS } from '../spellsData';
-import { RotateCw, Trash2, ZoomIn, ZoomOut, Copy, Download, Circle, Crosshair } from 'lucide-react';
+import { RotateCw, Trash2, ZoomIn, ZoomOut, Copy, Download, Circle, Crosshair, PenTool, Eraser } from 'lucide-react';
+
+interface DrawnPath {
+  id: string;
+  points: { x: number; y: number }[];
+}
 
 interface PlacedSymbol {
   id: string;
@@ -61,6 +66,11 @@ export const FreeCanvas: React.FC = () => {
   const panStart = useRef<{ vx: number; vy: number; mx: number; my: number } | null>(null);
   const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
   const [initSymPos, setInitSymPos] = useState<Map<string, { x: number; y: number }>>(new Map());
+
+  // Mode dessin libre
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [drawnPaths, setDrawnPaths] = useState<DrawnPath[]>([]);
+  const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[] | null>(null);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<HTMLDivElement>(null);
@@ -125,13 +135,27 @@ export const FreeCanvas: React.FC = () => {
     if (e.button === 1) {
       e.preventDefault(); setIsPanning(true);
       panStart.current = { vx: view.x, vy: view.y, mx: e.clientX, my: e.clientY };
+    } else if (e.button === 0 && isDrawingMode) {
+      const vp = viewportRef.current;
+      if (!vp) return;
+      const rect = vp.getBoundingClientRect();
+      const wx = (e.clientX - rect.left - view.x) / view.zoom;
+      const wy = (e.clientY - rect.top  - view.y) / view.zoom;
+      setCurrentPath([{ x: wx, y: wy }]);
     }
-  }, [view]);
+  }, [view, isDrawingMode]);
 
   const handleViewportMouseMove = useCallback((e: React.MouseEvent) => {
     if (isPanning && panStart.current) {
       const dx = e.clientX - panStart.current.mx, dy = e.clientY - panStart.current.my;
       setView(p => ({ ...p, x: panStart.current!.vx + dx, y: panStart.current!.vy + dy }));
+    } else if (isDrawingMode && currentPath) {
+      const vp = viewportRef.current;
+      if (!vp) return;
+      const rect = vp.getBoundingClientRect();
+      const wx = (e.clientX - rect.left - view.x) / view.zoom;
+      const wy = (e.clientY - rect.top  - view.y) / view.zoom;
+      setCurrentPath(p => p ? [...p, { x: wx, y: wy }] : null);
     } else if (draggingId && dragStartPos) {
       const dx = (e.clientX - dragStartPos.x) / view.zoom;
       const dy = (e.clientY - dragStartPos.y) / view.zoom;
@@ -140,12 +164,18 @@ export const FreeCanvas: React.FC = () => {
         return s;
       }));
     }
-  }, [isPanning, draggingId, dragStartPos, view.zoom, selectedIds, initSymPos]);
+  }, [isPanning, draggingId, dragStartPos, view.zoom, selectedIds, initSymPos, isDrawingMode, currentPath, view.x, view.y]);
 
   const handleViewportMouseUp = useCallback((e: React.MouseEvent) => {
     if (e.button === 1) setIsPanning(false);
+    if (currentPath) {
+      if (currentPath.length > 1) {
+        setDrawnPaths(p => [...p, { id: `path-${Date.now()}`, points: currentPath }]);
+      }
+      setCurrentPath(null);
+    }
     setDraggingId(null); setDragStartPos(null);
-  }, []);
+  }, [currentPath]);
 
   const handleViewportClick = (e: React.MouseEvent) => {
     if (e.target === viewportRef.current || e.target === worldRef.current) setSelectedIds(new Set());
@@ -175,6 +205,7 @@ export const FreeCanvas: React.FC = () => {
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; };
 
   const handleSymbolMouseDown = (e: React.MouseEvent, symId: string) => {
+    if (isDrawingMode) return;
     e.stopPropagation();
     let sel = new Set(selectedIds);
     if (e.shiftKey) { if (sel.has(symId)) sel.delete(symId); else sel.add(symId); }
@@ -195,7 +226,7 @@ export const FreeCanvas: React.FC = () => {
     const dupes = syms.map(sym => { const id = `sym-${nextId++}`; ids.add(id); return { ...sym, id, x: sym.x+30, y: sym.y+30 }; });
     setPlacedSymbols(p => [...p, ...dupes]); setSelectedIds(ids);
   };
-  const clearAll = () => { setPlacedSymbols([]); setSelectedIds(new Set()); };
+  const clearAll = () => { setPlacedSymbols([]); setSelectedIds(new Set()); setDrawnPaths([]); };
 
   // Recentrer sur l'origine monde (0,0) avec zoom 1
   const recenter = () => {
@@ -280,6 +311,23 @@ export const FreeCanvas: React.FC = () => {
           img.src = sym.blackImage || sym.image;
         }
       })));
+
+      // Dessins libres
+      if (drawnPaths.length > 0) {
+        ctx.strokeStyle = 'rgba(22,17,11,0.88)';
+        ctx.lineWidth = 1.5 * view.zoom;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        drawnPaths.forEach(path => {
+          if (path.points.length === 0) return;
+          ctx.beginPath();
+          ctx.moveTo(view.x + path.points[0].x * view.zoom, view.y + path.points[0].y * view.zoom);
+          for (let i = 1; i < path.points.length; i++) {
+            ctx.lineTo(view.x + path.points[i].x * view.zoom, view.y + path.points[i].y * view.zoom);
+          }
+          ctx.stroke();
+        });
+      }
 
       const link = document.createElement('a');
       link.download = 'pentacle-atelier.jpg';
@@ -431,12 +479,17 @@ export const FreeCanvas: React.FC = () => {
         <div>
           <div className="sidebar-section-title">Espace de travail</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <button onClick={exportJPG} className="primary" style={{ width: '100%' }}>
-              <Download size={14} /> Exporter JPG
+            <button onClick={() => setIsDrawingMode(!isDrawingMode)} className={isDrawingMode ? 'primary' : ''} style={{ width: '100%' }}>
+              <PenTool size={14} /> {isDrawingMode ? 'Dessin libre : Actif' : 'Dessin libre'}
             </button>
-            <button onClick={clearAll} className="danger" style={{ width: '100%' }}>
-              <Trash2 size={14} /> Tout effacer
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={exportJPG} className="primary" style={{ flex: 1 }}>
+                <Download size={14} /> Exporter
+              </button>
+              <button onClick={() => { if(isDrawingMode) {setDrawnPaths([]);} else {clearAll();} }} className="danger" style={{ flex: 1 }} title={isDrawingMode ? "Effacer les dessins" : "Tout effacer"}>
+                {isDrawingMode ? <Eraser size={14} /> : <Trash2 size={14} />} Effacer
+              </button>
+            </div>
           </div>
         </div>
 
@@ -537,6 +590,31 @@ export const FreeCanvas: React.FC = () => {
               )}
             </div>
           ))}
+
+          {/* Calque des dessins libres */}
+          <svg style={{ position: 'absolute', top: 0, left: 0, overflow: 'visible', pointerEvents: 'none', zIndex: 50 }}>
+            {drawnPaths.map(path => (
+              <polyline
+                key={path.id}
+                points={path.points.map(p => `${p.x},${p.y}`).join(' ')}
+                fill="none"
+                stroke="rgba(22,17,11,0.88)"
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
+            {currentPath && (
+              <polyline
+                points={currentPath.map(p => `${p.x},${p.y}`).join(' ')}
+                fill="none"
+                stroke="rgba(22,17,11,0.88)"
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
+          </svg>
         </div>
 
         {placedSymbols.length === 0 && (
