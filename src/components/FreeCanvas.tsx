@@ -371,6 +371,21 @@ export const FreeCanvas: React.FC = () => {
       });
     }
 
+    // ── Symboles placés manuellement (customLayout) ──
+    if (spell.customLayout) {
+      spell.customLayout.forEach(item => {
+        const def = ALL_SYMBOLS.find(s => s.id === item.symbolId);
+        if (!def) return;
+        syms.push({
+          id: `sym-${nextId++}`, symbolId: def.id, image: def.image,
+          blackImage: blackImages.get(def.image), name: def.name,
+          x: cx + item.xOffset - BASE_SYM / 2,
+          y: cy + item.yOffset - BASE_SYM / 2,
+          rotation: item.rotation, scale: item.scale,
+        });
+      });
+    }
+
     setPlacedSymbols(p => [...p, ...syms]);
     setSelectedIds(new Set());
   }, [view, blackImages]);

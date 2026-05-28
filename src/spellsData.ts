@@ -1,7 +1,9 @@
-export interface SpellArrowSlot {
-  id: string;        // arrow symbol id
-  rotation: 'outward' | 'inward' | 'tangent_cw' | 'tangent_ccw' | 'fixed';
-  fixedAngle?: number; // used when rotation='fixed'
+export interface CustomSymbolPlacement {
+  symbolId: string;
+  xOffset: number; // décalage par rapport au centre
+  yOffset: number;
+  rotation: number;
+  scale: number;
 }
 
 export interface SpellDef {
@@ -12,9 +14,7 @@ export interface SpellDef {
   arrows: string[];      // ordered list of arrow ids around the circle (one pass)
   arrowReps: number;     // how many times to repeat the arrows array around the circle
   arrowConfig?: 'alternate' | 'outward' | 'inward' | 'tangent';
-  // 'alternate' = even=outward, odd=inward (most common in manga)
-  // 'outward' = all point away from center (colonne style)
-  // 'inward' = all point toward center (convergence style)
+  customLayout?: CustomSymbolPlacement[]; // Pour les placements spécifiques hors motif circulaire
   circleCount?: number;  // number of concentric circles (default 1)
   wikiUrl?: string;
 }
@@ -114,11 +114,22 @@ export const SPELLS: SpellDef[] = [
   {
     id: 'dague_eau',
     name: 'Dague d\'Eau',
-    description: 'Sort créant une dague faite d\'eau. Utilise l\'emblème élémentaire de l\'eau.',
+    description: 'Sort de combat créant une courte lame d\'eau. Ce sort a un agencement spécifique : une flèche de dispersion canalise l\'eau, entourée de signes colonne et de symboles mystérieux.',
     emblems: ['eau'],
-    arrows: ['direction'],
-    arrowReps: 4,
-    arrowConfig: 'outward',
+    arrows: [], // Pas de flèches sur le bord
+    arrowReps: 0,
+    customLayout: [
+      // Flèches colonne formant un motif en haut
+      { symbolId: 'colonne', xOffset: 0, yOffset: -100, rotation: 180, scale: 0.9 }, // pointe vers le bas
+      { symbolId: 'colonne', xOffset: -45, yOffset: -85, rotation: 90, scale: 0.9 }, // pointe droite
+      { symbolId: 'colonne', xOffset: 45, yOffset: -85, rotation: 270, scale: 0.9 }, // pointe gauche
+      // Flèche dispersion au centre avec l'eau
+      { symbolId: 'dispersion', xOffset: 0, yOffset: 15, rotation: 180, scale: 2.2 },
+      // Signes inconnus en bas
+      { symbolId: 'inconnu_triangle', xOffset: 0, yOffset: 130, rotation: 0, scale: 1.1 },
+      { symbolId: 'inconnu_courbe', xOffset: -40, yOffset: 100, rotation: 0, scale: 0.9 },
+      { symbolId: 'inconnu_courbe', xOffset: 40, yOffset: 100, rotation: 180, scale: 0.9 }, // symétrique
+    ],
     circleCount: 1,
     wikiUrl: 'https://latelier-des-sorciers.fandom.com/fr/wiki/Dague_d%27eau',
   },

@@ -42,6 +42,8 @@ export const ARROWS: SymbolDef[] = [
   { id: 'pantin',        name: 'Pantin',           category: 'arrow', image: import.meta.env.BASE_URL + 'symbols/arrows/pantin.png',        description: "Partie du pantin-leurre volant." },
   { id: 'courbure',      name: 'Courbure',         category: 'arrow', image: import.meta.env.BASE_URL + 'symbols/arrows/courbure.png',      description: "Vu sur les capes magiques. Effet inconnu." },
   { id: 'fenetre',       name: 'Fenêtre',          category: 'arrow', image: import.meta.env.BASE_URL + 'symbols/arrows/fenetre.png',       description: "Effet encore inconnu." },
+  { id: 'inconnu_triangle', name: 'Triangle barré', category: 'arrow', image: import.meta.env.BASE_URL + 'symbols/arrows/inconnu_triangle.png', description: "Signe mystérieux en forme de triangle traversé d'un trait." },
+  { id: 'inconnu_courbe', name: 'Courbe inconnue', category: 'arrow', image: import.meta.env.BASE_URL + 'symbols/arrows/inconnu_courbe.png', description: "Signe inconnu en forme de courbe/crochet." },
 ];
 
 export const ALL_SYMBOLS = [...EMBLEMS, ...ARROWS];
