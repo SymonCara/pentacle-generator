@@ -7,6 +7,7 @@ import { RotateCw, Trash2, ZoomIn, ZoomOut, Copy, Download, Circle, Crosshair, P
 interface DrawnPath {
   id: string;
   points: { x: number; y: number }[];
+  thickness: number;
 }
 
 interface PlacedSymbol {
@@ -69,6 +70,7 @@ export const FreeCanvas: React.FC = () => {
 
   // Mode dessin libre
   const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [drawingThickness, setDrawingThickness] = useState(1.5);
   const [drawnPaths, setDrawnPaths] = useState<DrawnPath[]>([]);
   const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[] | null>(null);
 
@@ -170,12 +172,12 @@ export const FreeCanvas: React.FC = () => {
     if (e.button === 1) setIsPanning(false);
     if (currentPath) {
       if (currentPath.length > 1) {
-        setDrawnPaths(p => [...p, { id: `path-${Date.now()}`, points: currentPath }]);
+        setDrawnPaths(p => [...p, { id: `path-${Date.now()}`, points: currentPath, thickness: drawingThickness }]);
       }
       setCurrentPath(null);
     }
     setDraggingId(null); setDragStartPos(null);
-  }, [currentPath]);
+  }, [currentPath, drawingThickness]);
 
   const handleViewportClick = (e: React.MouseEvent) => {
     if (e.target === viewportRef.current || e.target === worldRef.current) setSelectedIds(new Set());
@@ -315,11 +317,11 @@ export const FreeCanvas: React.FC = () => {
       // Dessins libres
       if (drawnPaths.length > 0) {
         ctx.strokeStyle = 'rgba(22,17,11,0.88)';
-        ctx.lineWidth = 1.5 * view.zoom;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         drawnPaths.forEach(path => {
           if (path.points.length === 0) return;
+          ctx.lineWidth = path.thickness * view.zoom;
           ctx.beginPath();
           ctx.moveTo(view.x + path.points[0].x * view.zoom, view.y + path.points[0].y * view.zoom);
           for (let i = 1; i < path.points.length; i++) {
@@ -482,6 +484,23 @@ export const FreeCanvas: React.FC = () => {
             <button onClick={() => setIsDrawingMode(!isDrawingMode)} className={isDrawingMode ? 'primary' : ''} style={{ width: '100%' }}>
               <PenTool size={14} /> {isDrawingMode ? 'Dessin libre : Actif' : 'Dessin libre'}
             </button>
+            {isDrawingMode && (
+              <div style={{ padding: '0 4px', marginBottom: '4px' }}>
+                <label style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Épaisseur</span>
+                  <span>{drawingThickness}px</span>
+                </label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="15"
+                  step="0.5"
+                  value={drawingThickness}
+                  onChange={e => setDrawingThickness(parseFloat(e.target.value))}
+                  style={{ width: '100%', marginTop: '4px' }}
+                />
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={exportJPG} className="primary" style={{ flex: 1 }}>
                 <Download size={14} /> Exporter
@@ -599,7 +618,7 @@ export const FreeCanvas: React.FC = () => {
                 points={path.points.map(p => `${p.x},${p.y}`).join(' ')}
                 fill="none"
                 stroke="rgba(22,17,11,0.88)"
-                strokeWidth={1.5}
+                strokeWidth={path.thickness}
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
@@ -609,7 +628,7 @@ export const FreeCanvas: React.FC = () => {
                 points={currentPath.map(p => `${p.x},${p.y}`).join(' ')}
                 fill="none"
                 stroke="rgba(22,17,11,0.88)"
-                strokeWidth={1.5}
+                strokeWidth={drawingThickness}
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />

@@ -12,13 +12,14 @@ async function main() {
   const metadata = await img.metadata();
   console.log(`Image dimensions: ${metadata.width}x${metadata.height}`);
 
-  // It's a 499x499 image
-  await img.clone().extract({ left: 195, top: 350, width: 110, height: 90 })
+  // Extract bottom symbol (inconnu_triangle)
+  await img.clone().extract({ left: 145, top: 345, width: 210, height: 95 })
     .png()
     .toFile('public/symbols/arrows/inconnu_triangle.png');
   console.log('Saved inconnu_triangle.png');
 
-  await img.clone().extract({ left: 130, top: 280, width: 80, height: 90 })
+  // Extract left curve (inconnu_courbe)
+  await img.clone().extract({ left: 130, top: 170, width: 90, height: 190 })
     .png()
     .toFile('public/symbols/arrows/inconnu_courbe.png');
   console.log('Saved inconnu_courbe.png');
