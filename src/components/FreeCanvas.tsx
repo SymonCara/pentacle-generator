@@ -486,15 +486,15 @@ export const FreeCanvas: React.FC<{ lang: 'fr' | 'en' }> = ({ lang }) => {
       {/* ── Sidebar gauche ── */}
       <aside className="left-sidebar">
         <div>
-          <div className="sidebar-section-title">Espace de travail</div>
+          <div className="sidebar-section-title">{lang === 'fr' ? 'Espace de travail' : 'Workspace'}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <button onClick={() => setIsDrawingMode(!isDrawingMode)} className={isDrawingMode ? 'primary' : ''} style={{ width: '100%' }}>
-              <PenTool size={14} /> {isDrawingMode ? 'Dessin libre : Actif' : 'Dessin libre'}
+              <PenTool size={14} /> {isDrawingMode ? (lang === 'fr' ? 'Dessin libre : Actif' : 'Free Drawing : Active') : (lang === 'fr' ? 'Dessin libre' : 'Free Drawing')}
             </button>
             {isDrawingMode && (
               <div style={{ padding: '0 4px', marginBottom: '4px' }}>
                 <label style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Épaisseur</span>
+                  <span>{lang === 'fr' ? 'Épaisseur' : 'Thickness'}</span>
                   <span>{drawingThickness}px</span>
                 </label>
                 <input
@@ -510,10 +510,10 @@ export const FreeCanvas: React.FC<{ lang: 'fr' | 'en' }> = ({ lang }) => {
             )}
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={exportJPG} className="primary" style={{ flex: 1 }}>
-                <Download size={14} /> Exporter
+                <Download size={14} /> {lang === 'fr' ? 'Exporter' : 'Export'}
               </button>
-              <button onClick={() => { if(isDrawingMode) {setDrawnPaths([]);} else {clearAll();} }} className="danger" style={{ flex: 1 }} title={isDrawingMode ? "Effacer les dessins" : "Tout effacer"}>
-                {isDrawingMode ? <Eraser size={14} /> : <Trash2 size={14} />} Effacer
+              <button onClick={() => { if(isDrawingMode) {setDrawnPaths([]);} else {clearAll();} }} className="danger" style={{ flex: 1 }} title={isDrawingMode ? (lang === 'fr' ? "Effacer les dessins" : "Clear drawings") : (lang === 'fr' ? "Tout effacer" : "Clear all")}>
+                {isDrawingMode ? <Eraser size={14} /> : <Trash2 size={14} />} {lang === 'fr' ? 'Effacer' : 'Clear'}
               </button>
             </div>
           </div>
@@ -522,27 +522,27 @@ export const FreeCanvas: React.FC<{ lang: 'fr' | 'en' }> = ({ lang }) => {
         <hr className="section-divider" />
 
         <div>
-          <div className="sidebar-section-title">Navigation</div>
+          <div className="sidebar-section-title">{lang === 'fr' ? 'Navigation' : 'Navigation'}</div>
           {/* Bouton recentrer dédié */}
           <button onClick={recenter} style={{ width: '100%', marginBottom: '10px' }}>
-            <Crosshair size={14} /> Recentrer (origine)
+            <Crosshair size={14} /> {lang === 'fr' ? 'Recentrer (origine)' : 'Recenter (origin)'}
           </button>
           <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
             <button onClick={() => adjustZoom(1.2)} style={{ flex: 1, padding: '7px' }} title="Zoom +"><ZoomIn size={14} /></button>
-            <button onClick={recenter} style={{ flex: 2, fontSize: '0.82rem' }} title="Réinitialiser zoom">
+            <button onClick={recenter} style={{ flex: 2, fontSize: '0.82rem' }} title={lang === 'fr' ? 'Réinitialiser zoom' : 'Reset zoom'}>
               {Math.round(view.zoom * 100)}%
             </button>
             <button onClick={() => adjustZoom(0.8)} style={{ flex: 1, padding: '7px' }} title="Zoom -"><ZoomOut size={14} /></button>
           </div>
           <div className="toggle-row">
-            <span className="toggle-label" style={{ fontSize: '0.85rem' }}>Guides de tracé</span>
+            <span className="toggle-label" style={{ fontSize: '0.85rem' }}>{lang === 'fr' ? 'Guides de tracé' : 'Drawing guides'}</span>
             <label className="toggle-switch">
               <input type="checkbox" checked={showGuides} onChange={e => setShowGuides(e.target.checked)} />
               <span className="toggle-slider" />
             </label>
           </div>
           <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '10px', lineHeight: 1.6 }}>
-            🖱 Molette : zoom<br />🖱 Clic milieu : déplacer
+            🖱 {lang === 'fr' ? 'Molette : zoom' : 'Wheel: zoom'}<br />🖱 {lang === 'fr' ? 'Clic milieu : déplacer' : 'Middle click: pan'}
           </p>
         </div>
 
@@ -550,7 +550,7 @@ export const FreeCanvas: React.FC<{ lang: 'fr' | 'en' }> = ({ lang }) => {
           <>
             <hr className="section-divider" />
             <div>
-              <div className="sidebar-section-title">Sélection ({selectedIds.size})</div>
+              <div className="sidebar-section-title">{lang === 'fr' ? 'Sélection' : 'Selection'} ({selectedIds.size})</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <button onClick={() => rotateSelected(-15)} style={{ flex: 1 }}><RotateCw size={13} style={{ transform: 'scaleX(-1)' }} /> -15°</button>
@@ -561,11 +561,11 @@ export const FreeCanvas: React.FC<{ lang: 'fr' | 'en' }> = ({ lang }) => {
                   <button onClick={() => scaleSelected(-0.2)} style={{ flex: 1 }}><ZoomOut size={13} /> -</button>
                 </div>
                 <div style={{ display: 'flex', gap: '6px' }}>
-                  <button onClick={flipXSelected} style={{ flex: 1 }}>Miroir ↔</button>
-                  <button onClick={flipYSelected} style={{ flex: 1 }}>Miroir ↕</button>
+                  <button onClick={flipXSelected} style={{ flex: 1 }}>{lang === 'fr' ? 'Miroir ↔' : 'Mirror ↔'}</button>
+                  <button onClick={flipYSelected} style={{ flex: 1 }}>{lang === 'fr' ? 'Miroir ↕' : 'Mirror ↕'}</button>
                 </div>
-                <button onClick={duplicateSelected}><Copy size={13} /> Dupliquer</button>
-                <button onClick={deleteSelected} className="danger"><Trash2 size={13} /> Supprimer</button>
+                <button onClick={duplicateSelected}><Copy size={13} /> {lang === 'fr' ? 'Dupliquer' : 'Duplicate'}</button>
+                <button onClick={deleteSelected} className="danger"><Trash2 size={13} /> {lang === 'fr' ? 'Supprimer' : 'Delete'}</button>
               </div>
             </div>
           </>
@@ -654,7 +654,7 @@ export const FreeCanvas: React.FC<{ lang: 'fr' | 'en' }> = ({ lang }) => {
             color: 'rgba(0,0,0,0.18)', textAlign: 'center',
             pointerEvents: 'none', fontFamily: 'Cinzel, serif', fontSize: '1rem', letterSpacing: '1px',
           }}>
-            Glissez des symboles depuis le panneau de droite
+            {lang === 'fr' ? 'Glissez des symboles depuis le panneau de droite' : 'Drag symbols from the right panel'}
           </div>
         )}
 
@@ -671,56 +671,56 @@ export const FreeCanvas: React.FC<{ lang: 'fr' | 'en' }> = ({ lang }) => {
       {/* ── Sidebar droite ── */}
       <aside className="right-sidebar">
         <div className="sidebar-tabs">
-          <button className={`sidebar-tab ${rightTab === 'symbols' ? 'active' : ''}`} onClick={() => setRightTab('symbols')}>Symboles</button>
-          <button className={`sidebar-tab ${rightTab === 'spells' ? 'active' : ''}`} onClick={() => setRightTab('spells')}>Sorts préfaits</button>
+          <button className={`sidebar-tab ${rightTab === 'symbols' ? 'active' : ''}`} onClick={() => setRightTab('symbols')}>{lang === 'fr' ? 'Symboles' : 'Symbols'}</button>
+          <button className={`sidebar-tab ${rightTab === 'spells' ? 'active' : ''}`} onClick={() => setRightTab('spells')}>{lang === 'fr' ? 'Sorts préfaits' : 'Premade spells'}</button>
         </div>
 
         <div className="sidebar-content">
           {rightTab === 'symbols' ? (
             <>
-              <div className="sidebar-section-title">Formes</div>
+              <div className="sidebar-section-title">{lang === 'fr' ? 'Formes' : 'Shapes'}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px', marginBottom: '20px' }}>
-                <div className="palette-item" draggable onDragStart={e => handlePaletteDragStart(e, CIRCLE_SYM)} title="Cercle — glisser pour placer">
+                <div className="palette-item" draggable onDragStart={e => handlePaletteDragStart(e, CIRCLE_SYM)} title={lang === 'fr' ? "Cercle — glisser pour placer" : "Circle — drag to place"}>
                   <Circle size={34} color="var(--text-main)" strokeWidth={1.5} />
-                  <span>Cercle</span>
+                  <span>{lang === 'fr' ? 'Cercle' : 'Circle'}</span>
                 </div>
               </div>
-              <div className="sidebar-section-title">Emblèmes</div>
+              <div className="sidebar-section-title">{lang === 'fr' ? 'Emblèmes' : 'Emblems'}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px', marginBottom: '20px' }}>
                 {EMBLEMS.map(sym => (
-                  <div key={sym.id} className="palette-item" draggable onDragStart={e => handlePaletteDragStart(e, sym)} title={sym.description}>
+                  <div key={sym.id} className="palette-item" draggable onDragStart={e => handlePaletteDragStart(e, sym)} title={lang === 'fr' ? sym.description : (sym as any).descriptionEn}>
                     <img src={sym.image} alt={sym.name} style={{ width: 38, height: 38, objectFit: 'contain', pointerEvents: 'none', filter: 'brightness(0) invert(0.8)' }} />
-                    <span>{sym.name}</span>
+                    <span style={{ fontSize: '0.8rem', marginTop: '5px' }}>{lang === 'fr' ? sym.name : (sym as any).nameEn}</span>
                   </div>
                 ))}
               </div>
-              <div className="sidebar-section-title">Flèches & Modificateurs</div>
+              <div className="sidebar-section-title">{lang === 'fr' ? 'Flèches & Modificateurs' : 'Arrows & Modifiers'}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px' }}>
                 {ARROWS.map(sym => (
-                  <div key={sym.id} className="palette-item" draggable onDragStart={e => handlePaletteDragStart(e, sym)} title={sym.description}>
+                  <div key={sym.id} className="palette-item" draggable onDragStart={e => handlePaletteDragStart(e, sym)} title={lang === 'fr' ? sym.description : (sym as any).descriptionEn}>
                     <img src={sym.image} alt={sym.name} style={{ width: 38, height: 38, objectFit: 'contain', pointerEvents: 'none', filter: 'brightness(0) invert(0.8)' }} />
-                    <span>{sym.name}</span>
+                    <span style={{ fontSize: '0.8rem', marginTop: '5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>{lang === 'fr' ? sym.name : (sym as any).nameEn}</span>
                   </div>
                 ))}
               </div>
             </>
           ) : (
             <>
-              <div className="sidebar-section-title">Sorts officiels du manga</div>
+              <div className="sidebar-section-title">{lang === 'fr' ? 'Sorts officiels du manga' : 'Official Spells from the Manga'}</div>
               <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '14px', lineHeight: 1.6 }}>
-                Cliquer sur un sort pour l'importer au centre de votre vue.
+                {lang === 'fr' ? "Cliquer sur un sort pour l'importer au centre de votre vue." : "Click on a spell to import it to the center of your view."}
               </p>
               {SPELLS.map(spell => (
                 <div key={spell.id} className="spell-card" onClick={() => loadSpell(spell.id)}>
-                  <div className="spell-card-title">{spell.name}</div>
-                  <div className="spell-card-desc">{spell.description}</div>
+                  <div className="spell-card-title">{lang === 'fr' ? spell.name : (spell as any).nameEn}</div>
+                  <div className="spell-card-desc">{lang === 'fr' ? spell.description : (spell as any).descriptionEn}</div>
                   <div className="spell-card-tags">
                     {spell.emblems.map(e => <span key={e} className="spell-tag">⬡ {e}</span>)}
                     {spell.arrows.map(a => (
                       <span key={a} className="spell-tag" style={{ background: 'rgba(180,120,90,0.1)', borderColor: 'rgba(180,120,90,0.25)', color: 'rgba(200,151,90,0.8)' }}>→ {a}</span>
                     ))}
                     {spell.emblems.length === 0 && spell.arrows.length === 0 && (
-                      <span className="spell-tag" style={{ opacity: 0.5 }}>Pentacle non documenté</span>
+                      <span className="spell-tag" style={{ opacity: 0.5 }}>{lang === 'fr' ? 'Pentacle non documenté' : 'Undocumented Pentacle'}</span>
                     )}
                   </div>
                 </div>
