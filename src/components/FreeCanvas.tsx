@@ -22,6 +22,8 @@ interface PlacedSymbol {
   scale: number;
   isCircle?: boolean;
   circleSizePx?: number;
+  flipX?: boolean;
+  flipY?: boolean;
 }
 
 interface ViewState { x: number; y: number; zoom: number; }
@@ -197,9 +199,9 @@ export const FreeCanvas: React.FC = () => {
     const newId = `sym-${nextId++}`;
 
     if (symbol.id === '__circle__') {
-      setPlacedSymbols(p => [...p, { id: newId, symbolId: '__circle__', image: '', name: 'Cercle', x: wx, y: wy, rotation: 0, scale: 1, isCircle: true, circleSizePx: 200 }]);
+      setPlacedSymbols(p => [...p, { id: newId, symbolId: '__circle__', image: '', name: 'Cercle', x: wx, y: wy, rotation: 0, scale: 1, isCircle: true, circleSizePx: 200, flipX: false, flipY: false }]);
     } else {
-      setPlacedSymbols(p => [...p, { id: newId, symbolId: symbol.id, image: symbol.image, blackImage: blackImages.get(symbol.image), name: symbol.name, x: wx, y: wy, rotation: 0, scale: 1 }]);
+      setPlacedSymbols(p => [...p, { id: newId, symbolId: symbol.id, image: symbol.image, blackImage: blackImages.get(symbol.image), name: symbol.name, x: wx, y: wy, rotation: 0, scale: 1, flipX: false, flipY: false }]);
     }
     setSelectedIds(new Set([newId]));
   }, [view, blackImages]);
@@ -221,6 +223,8 @@ export const FreeCanvas: React.FC = () => {
 
   const rotateSelected = (d: number) => setPlacedSymbols(p => p.map(s => selectedIds.has(s.id) ? { ...s, rotation: s.rotation + d } : s));
   const scaleSelected  = (d: number) => setPlacedSymbols(p => p.map(s => selectedIds.has(s.id) ? { ...s, scale: Math.max(0.05, s.scale + d) } : s));
+  const flipXSelected  = () => setPlacedSymbols(p => p.map(s => selectedIds.has(s.id) ? { ...s, flipX: !s.flipX } : s));
+  const flipYSelected  = () => setPlacedSymbols(p => p.map(s => selectedIds.has(s.id) ? { ...s, flipY: !s.flipY } : s));
   const deleteSelected = () => { setPlacedSymbols(p => p.filter(s => !selectedIds.has(s.id))); setSelectedIds(new Set()); };
   const duplicateSelected = () => {
     const syms = placedSymbols.filter(s => selectedIds.has(s.id));
@@ -305,6 +309,7 @@ export const FreeCanvas: React.FC = () => {
             ctx.save();
             ctx.translate(cx, cy);
             ctx.rotate(sym.rotation * Math.PI / 180);
+            ctx.scale(sym.flipX ? -1 : 1, sym.flipY ? -1 : 1);
             ctx.drawImage(img, -drawSize / 2, -drawSize / 2, drawSize, drawSize);
             ctx.restore();
             resolve();
@@ -432,6 +437,7 @@ export const FreeCanvas: React.FC = () => {
           x: cx + item.xOffset - BASE_SYM / 2,
           y: cy + item.yOffset - BASE_SYM / 2,
           rotation: item.rotation, scale: item.scale,
+          flipX: item.flipX || false, flipY: item.flipY || false,
         });
       });
     }
@@ -553,6 +559,10 @@ export const FreeCanvas: React.FC = () => {
                   <button onClick={() => scaleSelected(0.2)} style={{ flex: 1 }}><ZoomIn size={13} /> +</button>
                   <button onClick={() => scaleSelected(-0.2)} style={{ flex: 1 }}><ZoomOut size={13} /> -</button>
                 </div>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={flipXSelected} style={{ flex: 1 }}>Miroir ↔</button>
+                  <button onClick={flipYSelected} style={{ flex: 1 }}>Miroir ↕</button>
+                </div>
                 <button onClick={duplicateSelected}><Copy size={13} /> Dupliquer</button>
                 <button onClick={deleteSelected} className="danger"><Trash2 size={13} /> Supprimer</button>
               </div>
@@ -587,7 +597,7 @@ export const FreeCanvas: React.FC = () => {
               className={`placed-symbol ${selectedIds.has(sym.id) ? 'selected' : ''}`}
               style={{
                 position: 'absolute', left: sym.x, top: sym.y,
-                transform: `rotate(${sym.rotation}deg) scale(${sym.scale})`,
+                transform: `rotate(${sym.rotation}deg) scale(${sym.scale}) scaleX(${sym.flipX ? -1 : 1}) scaleY(${sym.flipY ? -1 : 1})`,
                 transformOrigin: 'center',
                 cursor: draggingId === sym.id ? 'grabbing' : 'grab',
                 zIndex: selectedIds.has(sym.id) ? 100 : 10,

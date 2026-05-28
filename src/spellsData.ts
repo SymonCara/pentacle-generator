@@ -125,8 +125,8 @@ export const SPELLS: SpellDef[] = [
       // Flèche dispersion au centre-haut
       { symbolId: 'dispersion', xOffset: 0, yOffset: -100, rotation: 0, scale: 2.2 },
       // Signes inconnus (courbes) encadrant l'emblème d'eau
-      { symbolId: 'inconnu_courbe', xOffset: -65, yOffset: 15, rotation: 0, scale: 2.5 },
-      { symbolId: 'inconnu_courbe', xOffset: 65, yOffset: 15, rotation: 180, scale: 2.5 }, // symétrique
+      { symbolId: 'inconnu_courbe', xOffset: -80, yOffset: 15, rotation: 0, scale: 2.5 },
+      { symbolId: 'inconnu_courbe', xOffset: 80, yOffset: 15, rotation: 0, scale: 2.5, flipX: true }, // symétrique avec miroir H
       // Signe triangle tout en bas
       { symbolId: 'inconnu_triangle', xOffset: 0, yOffset: 160, rotation: 0, scale: 3.5 },
     ],
