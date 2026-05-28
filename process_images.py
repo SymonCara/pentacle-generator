@@ -7,6 +7,20 @@ def process_image(path):
         img = Image.open(path).convert("RGBA")
         datas = img.getdata()
 
+        # Check if the image is already processed (all visible pixels are white)
+        is_already_processed = True
+        has_visible_pixels = False
+        for item in datas:
+            if item[3] > 10:
+                has_visible_pixels = True
+                if item[0] != 255 or item[1] != 255 or item[2] != 255:
+                    is_already_processed = False
+                    break
+        
+        if has_visible_pixels and is_already_processed:
+            print(f"Skipping (already processed): {path}")
+            return
+
         newData = []
         for item in datas:
             # item is (R, G, B, A)
