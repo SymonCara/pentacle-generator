@@ -4,6 +4,8 @@ export interface CustomSymbolPlacement {
   yOffset: number;
   rotation: number;
   scale: number;
+  flipX?: boolean;
+  flipY?: boolean;
 }
 
 export interface SpellDef {
