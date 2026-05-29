@@ -55,7 +55,9 @@ export function SpellSimulation({ lang, pentacleImage, placedSymbols }: SpellSim
         const ring = {
           found: true,
           center: { x: width / 2, y: height / 2 },
-          radius: Math.min(width, height) * 0.35 // Slightly larger radius for effects
+          radius: Math.min(width, height) * 0.35, // Slightly larger radius for effects
+          rotationX: rotation.x,
+          rotationZ: rotation.y
         };
 
         rendererRef.current.render(ir, ring, time, { showGuides: false });
@@ -170,11 +172,12 @@ export function SpellSimulation({ lang, pentacleImage, placedSymbols }: SpellSim
               className="sim-3d-pentacle-img"
             />
           )}
-          <canvas 
-            ref={canvasRef} 
-            className="sim-3d-canvas"
-          />
         </div>
+        <canvas 
+          ref={canvasRef} 
+          className="sim-3d-canvas"
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 5, pointerEvents: 'none' }}
+        />
         
         {/* Helper text */}
         <div style={{ position: 'absolute', bottom: '20px', color: 'rgba(255,255,255,0.5)', pointerEvents: 'none', fontSize: '0.9rem', background: 'rgba(0,0,0,0.5)', padding: '4px 12px', borderRadius: '20px' }}>

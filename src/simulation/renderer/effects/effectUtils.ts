@@ -43,7 +43,7 @@ export function effectSuspension(spellIR) {
 
 // Shared element flow: SpellIR direction, focus, scale, and convergence are the base for every element effect.
 export function elementFlow(spellIR, portal, frame) {
-  const direction = portalOutDirection(spellIR);
+  const direction = portalOutDirection(spellIR, portal);
   return {
     direction,
     side: perpendicularVector(direction),
@@ -87,7 +87,7 @@ export function convergenceFlow(spellIR, portal, frame) {
   const lifetime = spellLifetimeFrames(spellIR, 0);
   const shrinkFrames = Math.max(18, lifetime * 0.26);
   const progress = active ? convergence.strength * smoothstep(frame / shrinkFrames) : 0;
-  const direction = portalOutDirection(spellIR);
+  const direction = portalOutDirection(spellIR, portal);
   const side = perpendicularVector(direction);
   const origin = {
     x: portal.center.x + side.x * convergence.point.x * portal.radiusX + direction.x * convergence.point.y * portal.radiusY,
@@ -140,10 +140,12 @@ export function scaledParticleCount(baseCount, spellIR, config) {
   return Math.min(config.renderer.particleCap, Math.round(baseCount * effectOpacity(spellIR)));
 }
 
-// The activated paper is drawn as a flat circle to match the pentacle image.
+// The activated paper is drawn as an ellipse to match the CSS rotated pentacle image.
 export function activePortalPlane(canvas, ring) {
-  const scaleY = 1.0;
-  const originY = canvas.height / 2;
+  const rotX = ring.rotationX !== undefined ? ring.rotationX : 60;
+  const rotZ = ring.rotationZ !== undefined ? ring.rotationZ : 0;
+  const scaleY = Math.cos(rotX * Math.PI / 180);
+  
   return {
     center: {
       x: ring.center.x,
@@ -151,30 +153,61 @@ export function activePortalPlane(canvas, ring) {
     },
     radiusX: ring.radius,
     radiusY: ring.radius * scaleY,
-    scaleY
+    scaleY,
+    rotationZ: rotZ * Math.PI / 180
   };
 }
 
 export function randomPortalPoint(portal, radiusXScale = 1, radiusYScale = radiusXScale) {
   const angle = Math.random() * Math.PI * 2;
   const radius = Math.sqrt(Math.random());
+  
+  // Base circular coordinates
+  let px = Math.cos(angle) * portal.radiusX * radiusXScale * radius;
+  let py = Math.sin(angle) * portal.radiusX * radiusYScale * radius;
+
+  // Apply Z rotation (spinning the pentacle)
+  if (portal.rotationZ) {
+    const cosZ = Math.cos(portal.rotationZ);
+    const sinZ = Math.sin(portal.rotationZ);
+    const rx = px * cosZ - py * sinZ;
+    const ry = px * sinZ + py * cosZ;
+    px = rx;
+    py = ry;
+  }
+
+  // Apply X rotation (squashing into ellipse)
+  py *= portal.scaleY;
+
   return {
-    x: portal.center.x + Math.cos(angle) * portal.radiusX * radiusXScale * radius,
-    y: portal.center.y + Math.sin(angle) * portal.radiusY * radiusYScale * radius
+    x: portal.center.x + px,
+    y: portal.center.y + py
   };
 }
 
 // Convert paper-local x/y/z direction into screen space. Positive z points out of the paper toward the top.
-export function portalOutDirection(spellIR) {
+export function portalOutDirection(spellIR, portal) {
   const direction = spellIR?.direction ?? {};
-  const paperX = direction.x ?? 0;
-  const paperY = direction.y ?? -1;
-  const paperZ = direction.z ?? 0;
-  const paperYScreenScale = 0.44;
+  let px = direction.x ?? 0;
+  let py = direction.y ?? -1;
+  
+  // Force volumetric "up" thrust out of the pentacle
+  const pz = direction.z !== undefined ? direction.z : 1.5; 
+
+  if (portal && portal.rotationZ) {
+    const cosZ = Math.cos(portal.rotationZ);
+    const sinZ = Math.sin(portal.rotationZ);
+    const rx = px * cosZ - py * sinZ;
+    const ry = px * sinZ + py * cosZ;
+    px = rx;
+    py = ry;
+  }
+
+  const scaleY = portal ? portal.scaleY : 0.44;
 
   return normalizeVector({
-    x: paperX,
-    y: paperY * paperYScreenScale - paperZ
+    x: px,
+    y: py * scaleY - pz
   });
 }
 
