@@ -51,7 +51,7 @@ function App() {
       </header>
 
       <div className="app-body">
-        <div style={{ display: view === 'canvas' ? 'block' : 'none', height: '100%', width: '100%' }}>
+        <div style={{ display: view === 'canvas' ? 'contents' : 'none' }}>
           <FreeCanvas lang={lang} ref={canvasRef} />
         </div>
         {view === 'simulation' && (
