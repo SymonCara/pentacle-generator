@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useImperativeHandle } from 'react';
 import { EMBLEMS, ARROWS, ALL_SYMBOLS } from '../symbolsData';
 import type { SymbolDef } from '../symbolsData';
 import { SPELLS } from '../spellsData';
@@ -56,7 +56,11 @@ const processImageToBlack = (src: string): Promise<string> =>
     img.src = src;
   });
 
-export const FreeCanvas: React.FC<{ lang: 'fr' | 'en' }> = ({ lang }) => {
+export interface FreeCanvasRef {
+  exportDataUrl: (transparent?: boolean) => Promise<string | null>;
+}
+
+export const FreeCanvas = React.forwardRef<FreeCanvasRef, { lang: 'fr' | 'en' }>(({ lang }, ref) => {
   const [placedSymbols, setPlacedSymbols] = useState<PlacedSymbol[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -253,8 +257,8 @@ export const FreeCanvas: React.FC<{ lang: 'fr' | 'en' }> = ({ lang }) => {
   // Calcul clé : CSS transform-origin:center ne modifie PAS la position layout.
   // Le centre du symbole en monde = (sym.x + BASE_SYM/2, sym.y + BASE_SYM/2)
   // Le centre du cercle en monde  = (sym.x + basePx/2,   sym.y + basePx/2)
-  const exportJPG = useCallback(async () => {
-    const vp = viewportRef.current; if (!vp) return;
+  const generateImageBase64 = useCallback(async (transparent: boolean = false): Promise<string | null> => {
+    const vp = viewportRef.current; if (!vp) return null;
     const prevSel = new Set(selectedIds);
     setSelectedIds(new Set());
     await new Promise(r => setTimeout(r, 100));
@@ -267,12 +271,15 @@ export const FreeCanvas: React.FC<{ lang: 'fr' | 'en' }> = ({ lang }) => {
       const ctx = oc.getContext('2d')!;
       ctx.scale(DPR, DPR);
 
-      // Fond beige
-      ctx.fillStyle = '#f2ece0';
-      ctx.fillRect(0, 0, width, height);
+      if (!transparent) {
+        ctx.fillStyle = '#f2ece0';
+        ctx.fillRect(0, 0, width, height);
+      } else {
+        ctx.clearRect(0, 0, width, height);
+      }
 
       // Guides
-      if (showGuides) {
+      if (showGuides && !transparent) {
         const ox = view.x, oy = view.y;
         ctx.strokeStyle = 'rgba(0,0,0,0.22)';
         ctx.lineWidth = 1;
@@ -295,7 +302,7 @@ export const FreeCanvas: React.FC<{ lang: 'fr' | 'en' }> = ({ lang }) => {
           const cx = view.x + (sym.x + basePx / 2) * view.zoom;
           const cy = view.y + (sym.y + basePx / 2) * view.zoom;
           const radius = (basePx / 2) * sym.scale * view.zoom;
-          ctx.strokeStyle = 'rgba(22,17,11,0.88)';
+          ctx.strokeStyle = transparent ? 'rgba(200, 151, 90, 0.9)' : 'rgba(22,17,11,0.88)';
           ctx.lineWidth = 1.5 * view.zoom;
           ctx.setLineDash([]);
           ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.stroke();
@@ -316,13 +323,13 @@ export const FreeCanvas: React.FC<{ lang: 'fr' | 'en' }> = ({ lang }) => {
             resolve();
           };
           img.onerror = () => resolve();
-          img.src = sym.blackImage || sym.image;
+          img.src = transparent ? (sym.image || sym.blackImage!) : (sym.blackImage || sym.image);
         }
       })));
 
       // Dessins libres
       if (drawnPaths.length > 0) {
-        ctx.strokeStyle = 'rgba(22,17,11,0.88)';
+        ctx.strokeStyle = transparent ? 'rgba(200, 151, 90, 0.9)' : 'rgba(22,17,11,0.88)';
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         drawnPaths.forEach(path => {
@@ -337,13 +344,28 @@ export const FreeCanvas: React.FC<{ lang: 'fr' | 'en' }> = ({ lang }) => {
         });
       }
 
+      return oc.toDataURL(transparent ? 'image/png' : 'image/jpeg', 0.95);
+    } catch (err) { 
+      console.error('Export error:', err); 
+      return null;
+    } finally { 
+      setSelectedIds(prevSel); 
+    }
+  }, [placedSymbols, view, showGuides, selectedIds, drawnPaths]);
+
+  useImperativeHandle(ref, () => ({
+    exportDataUrl: generateImageBase64
+  }));
+
+  const exportJPG = useCallback(async () => {
+    const dataUrl = await generateImageBase64(false);
+    if (dataUrl) {
       const link = document.createElement('a');
       link.download = 'pentacle-atelier.jpg';
-      link.href = oc.toDataURL('image/jpeg', 0.95);
+      link.href = dataUrl;
       link.click();
-    } catch (err) { console.error('Export error:', err); }
-    finally { setSelectedIds(prevSel); }
-  }, [placedSymbols, view, showGuides, selectedIds]);
+    }
+  }, [generateImageBase64]);
 
   // ── Charger un sort préfait ──────────────────────────────────────────────
   const loadSpell = useCallback((spellId: string) => {
@@ -731,4 +753,4 @@ export const FreeCanvas: React.FC<{ lang: 'fr' | 'en' }> = ({ lang }) => {
       </aside>
     </>
   );
-};
+});

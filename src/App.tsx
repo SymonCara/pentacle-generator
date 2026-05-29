@@ -1,11 +1,26 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { FreeCanvas } from './components/FreeCanvas';
+import type { FreeCanvasRef } from './components/FreeCanvas';
 import { SpellSimulation } from './components/SpellSimulation';
 import './index.css';
 
 function App() {
   const [lang, setLang] = useState<'fr' | 'en'>('fr');
   const [view, setView] = useState<'canvas' | 'simulation'>('canvas');
+  const [pentacleImage, setPentacleImage] = useState<string | null>(null);
+  const canvasRef = useRef<FreeCanvasRef>(null);
+
+  const handleToggleView = async () => {
+    if (view === 'canvas') {
+      if (canvasRef.current) {
+        const dataUrl = await canvasRef.current.exportDataUrl(true);
+        setPentacleImage(dataUrl);
+      }
+      setView('simulation');
+    } else {
+      setView('canvas');
+    }
+  };
 
   return (
     <div className="app-layout">
@@ -20,7 +35,7 @@ function App() {
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button 
-            onClick={() => setView(view === 'canvas' ? 'simulation' : 'canvas')}
+            onClick={handleToggleView}
             className={view === 'simulation' ? 'primary' : ''}
             style={{ padding: '6px 12px', fontSize: '0.85rem', fontWeight: 'bold' }}
           >
@@ -36,7 +51,14 @@ function App() {
       </header>
 
       <div className="app-body">
-        {view === 'canvas' ? <FreeCanvas lang={lang} /> : <SpellSimulation lang={lang} />}
+        <div style={{ display: view === 'canvas' ? 'block' : 'none', height: '100%', width: '100%' }}>
+          <FreeCanvas lang={lang} ref={canvasRef} />
+        </div>
+        {view === 'simulation' && (
+          <div style={{ height: '100%', width: '100%' }}>
+            <SpellSimulation lang={lang} pentacleImage={pentacleImage} />
+          </div>
+        )}
       </div>
     </div>
   );

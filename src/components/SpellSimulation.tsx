@@ -3,9 +3,10 @@ import './SpellSimulation.css';
 
 interface SpellSimulationProps {
   lang: 'fr' | 'en';
+  pentacleImage?: string | null;
 }
 
-export function SpellSimulation({ lang }: SpellSimulationProps) {
+export function SpellSimulation({ lang, pentacleImage }: SpellSimulationProps) {
   const [stage, setStage] = useState<number>(0);
 
   useEffect(() => {
@@ -99,10 +100,16 @@ export function SpellSimulation({ lang }: SpellSimulationProps) {
           <div className="camera">
             <div className={`ground-plane stage-${stage}`}>
               <div className="pentacle-base">
-                <div className="pentacle-ring outer"></div>
-                <div className="pentacle-ring inner"></div>
-                <div className="pentacle-star"></div>
-                <div className="pentacle-symbols"></div>
+                {pentacleImage ? (
+                  <img src={pentacleImage} alt="Custom Pentacle" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                ) : (
+                  <>
+                    <div className="pentacle-ring outer"></div>
+                    <div className="pentacle-ring inner"></div>
+                    <div className="pentacle-star"></div>
+                    <div className="pentacle-symbols"></div>
+                  </>
+                )}
               </div>
               
               <div className={`crystal-dome stage-${stage}`}>
