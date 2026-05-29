@@ -8,6 +8,7 @@ function App() {
   const [lang, setLang] = useState<'fr' | 'en'>('fr');
   const [view, setView] = useState<'canvas' | 'simulation'>('canvas');
   const [pentacleImage, setPentacleImage] = useState<string | null>(null);
+  const [placedSymbols, setPlacedSymbols] = useState<any[]>([]);
   const canvasRef = useRef<FreeCanvasRef>(null);
 
   const handleToggleView = async () => {
@@ -15,6 +16,7 @@ function App() {
       if (canvasRef.current) {
         const dataUrl = await canvasRef.current.exportDataUrl(true);
         setPentacleImage(dataUrl);
+        setPlacedSymbols(canvasRef.current.getSymbols());
       }
       setView('simulation');
     } else {
@@ -56,7 +58,7 @@ function App() {
         </div>
         {view === 'simulation' && (
           <div style={{ height: '100%', width: '100%' }}>
-            <SpellSimulation lang={lang} pentacleImage={pentacleImage} />
+            <SpellSimulation lang={lang} pentacleImage={pentacleImage} placedSymbols={placedSymbols} />
           </div>
         )}
       </div>

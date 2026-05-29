@@ -58,6 +58,7 @@ const processImageToBlack = (src: string): Promise<string> =>
 
 export interface FreeCanvasRef {
   exportDataUrl: (transparent?: boolean) => Promise<string | null>;
+  getSymbols: () => any[];
 }
 
 export const FreeCanvas = React.forwardRef<FreeCanvasRef, { lang: 'fr' | 'en' }>(({ lang }, ref) => {
@@ -354,7 +355,8 @@ export const FreeCanvas = React.forwardRef<FreeCanvasRef, { lang: 'fr' | 'en' }>
   }, [placedSymbols, view, showGuides, selectedIds, drawnPaths]);
 
   useImperativeHandle(ref, () => ({
-    exportDataUrl: generateImageBase64
+    exportDataUrl: generateImageBase64,
+    getSymbols: () => placedSymbols
   }));
 
   const exportJPG = useCallback(async () => {
