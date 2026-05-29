@@ -13,13 +13,13 @@ const DEFAULT_CONFIG = {
   renderer: {
     inkColor: "#241b16",
     guideColor: "rgba(92, 74, 54, 0.28)",
-    particleBaseCount: 130,
-    particleCap: 360,
+    particleBaseCount: 250, // Increased for 3D realism
+    particleCap: 700,       // Increased for 3D realism
     effectSize: {
-      baseScale: 1.28,
+      baseScale: 1.4,       // Slightly larger for depth
       sigilSizeInfluence: 2.1,
       minScale: 1,
-      maxScale: 2.35
+      maxScale: 2.5
     }
   }
 };
@@ -28,6 +28,11 @@ export function SpellSimulation({ lang, pentacleImage, placedSymbols }: SpellSim
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<any>(null);
   const [spellIR, setSpellIR] = useState<SpellIR | null>(null);
+
+  // 3D rotation state
+  const [rotation, setRotation] = useState({ x: 60, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -69,10 +74,10 @@ export function SpellSimulation({ lang, pentacleImage, placedSymbols }: SpellSim
   useEffect(() => {
     const handleResize = () => {
       if (canvasRef.current) {
-        const parent = canvasRef.current.parentElement;
-        if (parent) {
-          canvasRef.current.width = parent.clientWidth;
-          canvasRef.current.height = parent.clientHeight;
+        const wrapper = canvasRef.current.closest('.sim-3d-wrapper');
+        if (wrapper) {
+          canvasRef.current.width = wrapper.clientWidth;
+          canvasRef.current.height = wrapper.clientHeight;
         }
       }
     };
@@ -80,6 +85,29 @@ export function SpellSimulation({ lang, pentacleImage, placedSymbols }: SpellSim
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Mouse interaction handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setLastMousePos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    const deltaX = e.clientX - lastMousePos.x;
+    const deltaY = e.clientY - lastMousePos.y;
+    
+    setRotation(prev => ({
+      x: Math.max(0, Math.min(85, prev.x - deltaY * 0.5)), // Clamp tilt between 0 and 85 degrees
+      y: prev.y + deltaX * 0.5
+    }));
+    
+    setLastMousePos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
 
   const elementNames = {
     fire: lang === 'fr' ? 'Feu' : 'Fire',
@@ -123,27 +151,35 @@ export function SpellSimulation({ lang, pentacleImage, placedSymbols }: SpellSim
         </ul>
       </div>
 
-      {/* Rendu principal avec le canvas par-dessus l'image du pentacle */}
-      <div className="sim-canvas-panel" style={{ position: 'relative', flex: 1, height: '100%', overflow: 'hidden' }}>
-        {pentacleImage && (
-          <img 
-            src={pentacleImage} 
-            alt="Pentacle" 
-            style={{ 
-              position: 'absolute', 
-              top: '50%', left: '50%', 
-              transform: 'translate(-50%, -50%)', 
-              width: '80%', height: '80%', 
-              objectFit: 'contain',
-              opacity: 0.5,
-              pointerEvents: 'none'
-            }} 
+      {/* Rendu principal interactif 3D */}
+      <div 
+        className="sim-3d-wrapper" 
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      >
+        <div 
+          className="sim-3d-plane"
+          style={{ transform: `rotateX(${rotation.x}deg) rotateZ(${rotation.y}deg)` }}
+        >
+          {pentacleImage && (
+            <img 
+              src={pentacleImage} 
+              alt="Pentacle" 
+              className="sim-3d-pentacle-img"
+            />
+          )}
+          <canvas 
+            ref={canvasRef} 
+            className="sim-3d-canvas"
           />
-        )}
-        <canvas 
-          ref={canvasRef} 
-          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-        />
+        </div>
+        
+        {/* Helper text */}
+        <div style={{ position: 'absolute', bottom: '20px', color: 'rgba(255,255,255,0.5)', pointerEvents: 'none', fontSize: '0.9rem', background: 'rgba(0,0,0,0.5)', padding: '4px 12px', borderRadius: '20px' }}>
+          {lang === 'fr' ? 'Cliquez et glissez pour tourner' : 'Click and drag to rotate'}
+        </div>
       </div>
     </div>
   );
